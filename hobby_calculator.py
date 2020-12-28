@@ -1,18 +1,22 @@
 import PySimpleGUI as sg    
 
+sg.ChangeLookAndFeel('Reddit')  
+
+
 def numerical_calculator():
     # Code originally adapted from https://gist.github.com/ball13411/39014c86945ac40bbd7c39677b560991
 
     # Layout                                                         # Creat GUI
-    layout = [[sg.Txt(''  * 10)],                      
-            [sg.Text('', size=(15, 1), font=('Helvetica', 18), text_color='red', key='input')],
-            [sg.Txt(''  * 10)],
-            [sg.Button('(', size=(5,2)), sg.Button(')', size=(5,2)), sg.Button('c', size=(5,2)), sg.Button('«', size=(5,2))],
-            [sg.Button('7', size=(5,2)), sg.Button('8', size=(5,2)), sg.Button('9', size=(5,2)), sg.Button('÷', size=(5,2))],
-            [sg.Button('4', size=(5,2)), sg.Button('5', size=(5,2)), sg.Button('6', size=(5,2)), sg.Button('x', size=(5,2))],
-            [sg.Button('1', size=(5,2)), sg.Button('2', size=(5,2)), sg.Button('3', size=(5,2)), sg.Button('-', size=(5,2))],
-            [sg.Button('.', size=(5,2)), sg.Button('0', size=(5,2)), sg.Button('=', size=(5,2)), sg.Button('+', size=(5,2))],
-            ]
+    layout = [
+        [sg.Txt(''  * 10)],                      
+        [sg.Text('', size=(15, 1), font=('Helvetica', 18), text_color='red', key='input')],
+        [sg.Txt(''  * 10)],
+        [sg.Button('(', size=(5,2)), sg.Button(')', size=(5,2)), sg.Button('c', size=(5,2)), sg.Button('«', size=(5,2))],
+        [sg.Button('7', size=(5,2)), sg.Button('8', size=(5,2)), sg.Button('9', size=(5,2)), sg.Button('÷', size=(5,2))],
+        [sg.Button('4', size=(5,2)), sg.Button('5', size=(5,2)), sg.Button('6', size=(5,2)), sg.Button('x', size=(5,2))],
+        [sg.Button('1', size=(5,2)), sg.Button('2', size=(5,2)), sg.Button('3', size=(5,2)), sg.Button('-', size=(5,2))],
+        [sg.Button('.', size=(5,2)), sg.Button('0', size=(5,2)), sg.Button('=', size=(5,2)), sg.Button('+', size=(5,2))],
+    ]
 
     # Set PySimpleGUI
     window = sg.Window('CALCULATOR', layout, grab_anywhere=False)
@@ -80,52 +84,91 @@ def numerical_calculator():
             break
 
 def conversion_calculator():
-    first = True
-
-    # Set unit lists and coefficients
-    len_units = ['Inch', 'Foot', 'Yard', 'Millimeter', 'Centimeter', 'Meter']
-    coeff_l = [[1, 1/12, 1/36, 25.4, 2.54, 0.0254],
-               [12, 1, 1/3, 304.8, 30.48, 0.3048],
-               [36, 3, 1, 914.4, 91.44, 0.9144],
-               [1/25.4, 1/304.8, 1/914.4, 1, 0.1, 0.001],
-               [1/2.54, 1/30.48, 1/91.44, 10, 1, 0.01],
-               [39.37, 3.281, 1.094, 1000, 100, 1]]
-    key_l = {'Inch' : 0, 'Foot' : 1, 'Yard' : 2, 'Millimeter' : 3,
-                'Centimeter' : 4, 'Meter' : 5}
+    # Set unit lists and conversion equations
+    len_units = ['Inch', 'Foot', 'Yard', 'Mile', 'Millimeter', 'Centimeter', 'Meter', 'Kilometer']
+    convert_l = [
+        [lambda x: x, lambda x: x*1/12, lambda x: x*1/36, lambda x: x/63360, lambda x: x*25.4, lambda x: x*2.54, lambda x: x*0.0254, lambda x: x/39370],
+        [lambda x: x*12, lambda x: x, lambda x: x*1/3, lambda x: x/5280, lambda x: x*304.8, lambda x: x*30.48, lambda x: x*0.3048, lambda x: x/3281],
+        [lambda x: x*36, lambda x: x*3, lambda x: x, lambda x: x/1760, lambda x: x*914.4, lambda x: x*91.44, lambda x: x*0.9144, lambda x: x/1094],
+        [lambda x: x*63360, lambda x: x*5280, lambda x: x*1760, lambda x: x, lambda x: x*1609340, lambda x: x*160934, lambda x: x*1609.34, lambda x: x*1.60934],
+        [lambda x: x*1/25.4, lambda x: x*1/304.8, lambda x: x*1/914.4, lambda x: x/1609340, lambda x: x, lambda x: x*0.1, lambda x: x*0.001, lambda x: x/1000000],
+        [lambda x: x*1/2.54, lambda x: x*1/30.48, lambda x: x*1/91.44, lambda x: x/160934, lambda x: x*10, lambda x: x, lambda x: x*0.01, lambda x: x/100000],
+        [lambda x: x*39.37, lambda x: x*3.28084, lambda x: x*1.09361, lambda x: x/1609.34, lambda x: x*1000, lambda x: x*100, lambda x: x, lambda x: x/1000],
+        [lambda x: x*39370, lambda x: x*3280.84, lambda x: x*1093.61, lambda x: x/1.609, lambda x: x*1000000, lambda x: x*100000, lambda x: x*1000, lambda x: x]
+    ]
+    key_l = {'Inch' : 0, 'Foot' : 1, 'Yard' : 2, 'Mile' : 3, 'Millimeter' : 4,
+                'Centimeter' : 5, 'Meter' : 6, 'Kilometer': 7}
 
     temp_units = ['Fahrenheit', 'Celsius', 'Kelvin']
-    convert_t = [[lambda x: x, lambda x: (x-32)*(5/9), lambda x: (x-32)*(5/9)+273.15],
-                 [lambda x: (x*9/5)+32, lambda x: x, lambda x: x+273.15],
-                 [lambda x: (x-273.15)*9/5+32, lambda x: x-273.15, lambda x: x]]
+    convert_t = [
+        [lambda x: x, lambda x: (x-32)*(5/9), lambda x: (x-32)*(5/9)+273.15],
+        [lambda x: (x*9/5)+32, lambda x: x, lambda x: x+273.15],
+        [lambda x: (x-273.15)*9/5+32, lambda x: x-273.15, lambda x: x]
+    ]
     key_t = {'Fahrenheit' : 0, 'Celsius' : 1, 'Kelvin' : 2}
 
     vol_units = ['Teaspoon', 'Tablespoon', 'Fluid Ounce', 'Cup', 'Pint', 'Quart', 'Gallon', 'Liter']
+    convert_v = [
+        [lambda x: x, lambda x: x*1/3, lambda x: x*1/6, lambda x: x*1/48, lambda x: x*1/96, lambda x: x*1/192, lambda x: x*1/768, lambda x: x*1/202.884],
+        [lambda x: x*3, lambda x: x, lambda x: x*1/2, lambda x: x*1/16, lambda x: x*1/32, lambda x: x*1/64, lambda x: x*1/256, lambda x: x*1/67.628],
+        [lambda x: x*6, lambda x: x*2, lambda x: x, lambda x: x*1/8, lambda x: x*1/16, lambda x: x*1/32, lambda x: x*1/128, lambda x: x*1/33.814],
+        [lambda x: x*48, lambda x: x*16, lambda x: x*8, lambda x: x, lambda x: x*1/2, lambda x: x*1/4, lambda x: x*1/16, lambda x: x*1/4.227],
+        [lambda x: x*96, lambda x: x*32, lambda x: x*16, lambda x: x*2, lambda x: x, lambda x: x*1/2, lambda x: x*1/18, lambda x: x*1/2.113],
+        [lambda x: x*192, lambda x: x*64, lambda x: x*32, lambda x: x*4, lambda x: x*2, lambda x: x, lambda x: x*1/4, lambda x: x*1/1.057],
+        [lambda x: x*768, lambda x: x*256, lambda x: x*128, lambda x: x*16, lambda x: x*8, lambda x: x*4, lambda x: x, lambda x: x*3.785],
+        [lambda x: x*202.884, lambda x: x*67.628, lambda x: x*33.814, lambda x: x*4.227, lambda x: x*2.113, lambda x: x*1.057, lambda x: x*1/3.785, lambda x: x]
+    ]
+    key_v = {'Teaspoon' : 0, 'Tablespoon' : 1, 'Fluid Ounce' : 2, 'Cup' : 3,
+                'Pint' : 4, 'Quart' : 5, 'Gallon' : 6, 'Liter' : 7}
+
     weight_units = ['Ounce', 'Pound', 'Gram', 'Kilogram']
+    convert_w = [
+        [lambda x: x, lambda x: x*1/16, lambda x: x*28.3495, lambda x: x*1/35.274],
+        [lambda x: x*16, lambda x: x, lambda x: x*454, lambda x: x*1/2.205],
+        [lambda x: x*1/28.35, lambda x: x*1/454, lambda x: x, lambda x: x*1/1000],
+        [lambda x: x*35.274, lambda x: x*2.205, lambda x: x*1000, lambda x: x]
+    ]
+    key_w = {'Ounce' : 0, 'Pound' : 1, 'Gram' : 2, 'Kilogram' : 3}
 
     # Set up Tab layouts
     len_layout = [
         [sg.T('From:', size=(20,1)), sg.T('To:', size=(20,1))],
-        [sg.In(size=(22,1), enable_events=True, key='-INPUT_L-'), sg.T(size=(20,1), key='-OUTPUT_L-', background_color='white', text_color='black')],
+        [sg.In(size=(22,1), enable_events=True, key='-INPUT_L-'), sg.T(size=(20,1), key='-OUTPUT_L-', background_color='#d3dee8', relief=sg.RELIEF_SUNKEN, text_color='black')],
         [sg.Listbox(len_units, key='-FROM_UNIT_L-', enable_events=True, size=(20,12)), sg.Listbox(len_units, key='-TO_UNIT_L-', enable_events=True, size=(20,12))]
     ]
 
     temp_layout = [
         [sg.T('From:', size=(20,1)), sg.T('To:', size=(20,1))],
-        [sg.In(size=(22,1), enable_events=True, key='-INPUT_T-'), sg.T(size=(20,1), key='-OUTPUT_T-', background_color='white', text_color='black')],
+        [sg.In(size=(22,1), enable_events=True, key='-INPUT_T-'), sg.T(size=(20,1), key='-OUTPUT_T-', background_color='#d3dee8', relief=sg.RELIEF_SUNKEN, text_color='black')],
         [sg.Listbox(temp_units, key='-FROM_UNIT_T-', enable_events=True, size=(20,12)), sg.Listbox(temp_units, key='-TO_UNIT_T-', enable_events=True, size=(20,12))]
     ]
 
     vol_layout = [
         [sg.T('From:', size=(20,1)), sg.T('To:', size=(20,1))],
-        [sg.In(size=(22,1), enable_events=True, key='-INPUT_V-'), sg.T(size=(20,1), background_color='white', key='-OUTPUT_V-', text_color='black')],
+        [sg.In(size=(22,1), enable_events=True, key='-INPUT_V-'), sg.T(size=(20,1), background_color='#d3dee8', relief=sg.RELIEF_SUNKEN, key='-OUTPUT_V-', text_color='black')],
         [sg.Listbox(vol_units, key='-FROM_UNIT_V-', enable_events=True, size=(20,12)), sg.Listbox(vol_units, key='-TO_UNIT_V-', enable_events=True, size=(20,12))]
     ]
 
     weight_layout = [
         [sg.T('From:', size=(20,1)), sg.T('To:', size=(20,1))],
-        [sg.In(size=(22,1), enable_events=True, key='-INPUT_W-'), sg.T(size=(20,1), key='-OUTPUT_W-', background_color='white', text_color='black')],
+        [sg.In(size=(22,1), enable_events=True, key='-INPUT_W-'), sg.T(size=(20,1), key='-OUTPUT_W-', background_color='#d3dee8', relief=sg.RELIEF_SUNKEN, text_color='black')],
         [sg.Listbox(weight_units, key='-FROM_UNIT_W-', enable_events=True, size=(20,12)), sg.Listbox(weight_units, key='-TO_UNIT_W-', enable_events=True, size=(20,12))]
     ]
+
+    # Set lists of the buttons for easy access
+    input_list = ['-INPUT_L-', '-INPUT_T-', '-INPUT_V-', '-INPUT_W-']
+    input_index = {'-INPUT_L-' : 0, '-INPUT_T-' : 1, '-INPUT_V-' : 2, '-INPUT_W-' : 3}
+
+    from_list = ['-FROM_UNIT_L-', '-FROM_UNIT_T-', '-FROM_UNIT_V-', '-FROM_UNIT_W-']
+    from_index = {'-FROM_UNIT_L-' : 0, '-FROM_UNIT_T-' : 1, '-FROM_UNIT_V-' : 2, '-FROM_UNIT_W-' : 3}
+
+    to_list = ['-TO_UNIT_L-', '-TO_UNIT_T-', '-TO_UNIT_V-', '-TO_UNIT_W-']
+    to_index = {'-TO_UNIT_L-' : 0, '-TO_UNIT_T-' : 1, '-TO_UNIT_V-' : 2, '-TO_UNIT_W-' : 3}
+
+    output_list = ['-OUTPUT_L-', '-OUTPUT_T-', '-OUTPUT_V-', '-OUTPUT_W-']
+
+    convert = [convert_l, convert_t, convert_v, convert_w]
+    key = [key_l, key_t, key_v, key_w]
 
     # Layout
     layout = [      
@@ -142,71 +185,53 @@ def conversion_calculator():
         event, values = window.read()
         if event == sg.WIN_CLOSED:
             break
-        # ----- Length functions --------
-        elif event == '-INPUT_L-':
-            # The user has entered a length to convert
-            if values['-FROM_UNIT_L-']==[] or values['-TO_UNIT_L-']==[]:
-                # If there is no selected unit or no number, do nothing
+        # ----- Input number ------------
+        if event in input_list:
+            i = input_index[event]
+            if values[from_list[i]]==[] or values[to_list[i]]==[]:
+                # If there is no selected unit, do nothing
                 pass
             else:
-                c = key_l[values['-TO_UNIT_L-'][0]]
-                r = key_l[values['-FROM_UNIT_L-'][0]]
-                
-                result = int(values['-INPUT_L-']) * coeff_l[r][c]
-                window['-OUTPUT_L-'].update(result)
-        elif event == '-FROM_UNIT_L-':
-            if values['-TO_UNIT_L-']==[] or values['-INPUT_L-'] == '':
-                # If there is no selected "to" unit or no number, do nothing
-                pass
-            else:
-                c = key_l[values['-TO_UNIT_L-'][0]]
-                r = key_l[values['-FROM_UNIT_L-'][0]]
-                
-                result = int(values['-INPUT_L-']) * coeff_l[r][c]
-                window['-OUTPUT_L-'].update(result)
-        elif event == '-TO_UNIT_L-':
-            if values['-FROM_UNIT_L-'] == [] or values['-INPUT_L-'] == '':
-                # If there is no selected "from" unit or no number, do nothing
-                pass
-            else:
-                c = key_l[values['-TO_UNIT_L-'][0]]
-                r = key_l[values['-FROM_UNIT_L-'][0]]
-                
-                result = int(values['-INPUT_L-']) * coeff_l[r][c]
-                window['-OUTPUT_L-'].update(result)
-        # ----- Temperature functions ------
-        elif event == '-INPUT_T-':
-            # The user has entered a temperature to convert
-            if values['-FROM_UNIT_T-']==[] or values['-TO_UNIT_T-']==[]:
-                # If there is no selected unit or no number, do nothing
-                print("pass")
-                pass
-            else:
-                c = key_t[values['-TO_UNIT_T-'][0]]
-                r = key_t[values['-FROM_UNIT_T-'][0]]
+                curr_key = key[i]
 
-                result = convert_t[r][c](int(values['-INPUT_T-']))
-                window['-OUTPUT_T-'].update(result)
-        elif event == '-FROM_UNIT_T-':
-            if values['-TO_UNIT_T-']==[] or values['-INPUT_T-'] == '':
+                c = curr_key[values[to_list[i]][0]]
+                r = curr_key[values[from_list[i]][0]]
+
+                converter = convert[i]
+                
+                result = converter[r][c](int(values[input_list[i]]))
+                window[output_list[i]].update(result)
+        # ----- Unit changed
+        elif event in from_list:
+            i = from_index[event]
+            if values[to_list[i]]==[] or values[input_list[i]] == '':
                 # If there is no selected "to" unit or no number, do nothing
                 pass
             else:
-                c = key_t[values['-TO_UNIT_T-'][0]]
-                r = key_t[values['-FROM_UNIT_T-'][0]]
-                
-                result = convert_t[r][c](int(values['-INPUT_T-']))
-                window['-OUTPUT_T-'].update(result)
-        elif event == '-TO_UNIT_T-':
-            if values['-FROM_UNIT_T-'] == [] or values['-INPUT_T-'] == '':
+                curr_key = key[i]
+
+                c = curr_key[values[to_list[i]][0]]
+                r = curr_key[values[from_list[i]][0]]
+
+                converter = convert[i]
+
+                result = converter[r][c](int(values[input_list[i]]))
+                window[output_list[i]].update(result)
+        elif event in to_list:
+            i = to_index[event]
+            if values[from_list[i]] == [] or values[input_list[i]] == '':
                 # If there is no selected "from" unit or no number, do nothing
                 pass
             else:
-                c = key_t[values['-TO_UNIT_T-'][0]]
-                r = key_t[values['-FROM_UNIT_T-'][0]]
+                curr_key = key[i]
                 
-                result = convert_t[r][c](int(values['-INPUT_T-']))
-                window['-OUTPUT_T-'].update(result)
+                c = curr_key[values[to_list[i]][0]]
+                r = curr_key[values[from_list[i]][0]]
+
+                converter = convert[i]
+
+                result = converter[r][c](int(values[input_list[i]]))
+                window[output_list[i]].update(result)
     window.close()
 
 conversion_calculator()
