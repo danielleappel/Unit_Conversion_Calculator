@@ -233,5 +233,3 @@ def conversion_calculator():
                 result = converter[r][c](int(values[input_list[i]]))
                 window[output_list[i]].update(result)
     window.close()
-
-conversion_calculator()
